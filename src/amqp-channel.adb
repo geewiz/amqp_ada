@@ -210,4 +210,280 @@ package body AMQP.Channel is
       return Chan.Number;
    end Get_Channel_Number;
 
+   procedure Queue_Declare (
+      Chan : in out Channel;
+      Queue : String;
+      Durable : Boolean := False;
+      Exclusive : Boolean := False;
+      Auto_Delete : Boolean := False
+   ) is
+      use Ada.Text_IO;
+      Declare_Method : Methods.Queue_Declare;
+      Declare_Ok_Method : Methods.Queue_Declare_Ok;
+      Args_Buf : Buffer;
+      Class_Id : Short;
+      Method_Id : Short;
+      Success : Boolean;
+   begin
+      if Chan.State /= Open then
+         raise Channel_Error with "Channel not open";
+      end if;
+
+      Put_Line ("Declaring queue: " & Queue);
+
+      -- Setup Queue.Declare
+      Declare_Method.Queue := new String'(Queue);
+      Declare_Method.Durable := Durable;
+      Declare_Method.Exclusive := Exclusive;
+      Declare_Method.Auto_Delete := Auto_Delete;
+      Declare_Method.Arguments.Head := null;
+
+      Reset (Args_Buf);
+      Encode_Queue_Declare (Args_Buf, Declare_Method);
+      Send_Method (Chan, AMQP.Constants.CLASS_QUEUE, AMQP.Constants.QUEUE_DECLARE, Args_Buf);
+
+      Put_Line ("Sent Queue.Declare");
+
+      -- Wait for Queue.Declare-Ok
+      Put_Line ("Waiting for Queue.Declare-Ok...");
+      Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
+      if not Success then
+         raise Channel_Error with "Failed to receive Queue.Declare-Ok";
+      end if;
+
+      if Class_Id /= AMQP.Constants.CLASS_QUEUE or else
+         Method_Id /= AMQP.Constants.QUEUE_DECLARE_OK
+      then
+         raise Channel_Error with "Expected Queue.Declare-Ok";
+      end if;
+
+      Decode_Queue_Declare_Ok (Args_Buf, Declare_Ok_Method, Success);
+      if not Success then
+         raise Channel_Error with "Failed to decode Queue.Declare-Ok";
+      end if;
+
+      Put_Line ("Queue declared: " & Declare_Ok_Method.Queue.all);
+   end Queue_Declare;
+
+   procedure Basic_Publish (
+      Chan : in out Channel;
+      Exchange : String;
+      Routing_Key : String;
+      Message_Body : String
+   ) is
+      use Ada.Text_IO;
+      use Ada.Streams;
+      Publish_Method : Methods.Basic_Publish;
+      Header_Method : Methods.Content_Header;
+      Args_Buf : Buffer;
+      F : Frame;
+   begin
+      if Chan.State /= Open then
+         raise Channel_Error with "Channel not open";
+      end if;
+
+      Put_Line ("Publishing message to exchange='" & Exchange & "' routing_key='" & Routing_Key & "'");
+
+      -- Send Basic.Publish method
+      Publish_Method.Exchange := new String'(Exchange);
+      Publish_Method.Routing_Key := new String'(Routing_Key);
+
+      Reset (Args_Buf);
+      Encode_Basic_Publish (Args_Buf, Publish_Method);
+      Send_Method (Chan, AMQP.Constants.CLASS_BASIC, AMQP.Constants.BASIC_PUBLISH, Args_Buf);
+
+      -- Send content header frame
+      Header_Method.Class_Id := AMQP.Constants.CLASS_BASIC;
+      Header_Method.Body_Size := Long_Long (Message_Body'Length);
+
+      Reset (Args_Buf);
+      Encode_Content_Header (Args_Buf, Header_Method);
+
+      F.Kind := Header_Frame;
+      F.Channel := Chan.Number;
+      F.Payload.Length := Args_Buf.Length;
+      for I in 1 .. Args_Buf.Length loop
+         F.Payload.Data (I) := Args_Buf.Data (I);
+      end loop;
+
+      AMQP.Connection.Send_Frame (Chan.Conn.all, F);
+
+      -- Send body frame
+      F.Kind := Body_Frame;
+      F.Channel := Chan.Number;
+      F.Payload.Length := Stream_Element_Offset (Message_Body'Length);
+      for I in Message_Body'Range loop
+         F.Payload.Data (Stream_Element_Offset (I - Message_Body'First + 1)) :=
+            Stream_Element (Character'Pos (Message_Body (I)));
+      end loop;
+
+      AMQP.Connection.Send_Frame (Chan.Conn.all, F);
+
+      Put_Line ("Message published");
+   end Basic_Publish;
+
+   procedure Basic_Consume (
+      Chan : in out Channel;
+      Queue : String;
+      Consumer_Tag : String;
+      No_Ack : Boolean := False
+   ) is
+      use Ada.Text_IO;
+      Consume_Method : Methods.Basic_Consume;
+      Consume_Ok_Method : Methods.Basic_Consume_Ok;
+      Args_Buf : Buffer;
+      Class_Id : Short;
+      Method_Id : Short;
+      Success : Boolean;
+   begin
+      if Chan.State /= Open then
+         raise Channel_Error with "Channel not open";
+      end if;
+
+      Put_Line ("Starting consumer on queue: " & Queue);
+
+      -- Send Basic.Consume
+      Consume_Method.Queue := new String'(Queue);
+      Consume_Method.Consumer_Tag := new String'(Consumer_Tag);
+      Consume_Method.No_Ack := No_Ack;
+      Consume_Method.Arguments.Head := null;
+
+      Reset (Args_Buf);
+      Encode_Basic_Consume (Args_Buf, Consume_Method);
+      Send_Method (Chan, AMQP.Constants.CLASS_BASIC, AMQP.Constants.BASIC_CONSUME, Args_Buf);
+
+      Put_Line ("Sent Basic.Consume");
+
+      -- Wait for Basic.Consume-Ok
+      Put_Line ("Waiting for Basic.Consume-Ok...");
+      Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
+      if not Success then
+         raise Channel_Error with "Failed to receive Basic.Consume-Ok";
+      end if;
+
+      if Class_Id /= AMQP.Constants.CLASS_BASIC or else
+         Method_Id /= AMQP.Constants.BASIC_CONSUME_OK
+      then
+         raise Channel_Error with "Expected Basic.Consume-Ok";
+      end if;
+
+      Decode_Basic_Consume_Ok (Args_Buf, Consume_Ok_Method, Success);
+      if not Success then
+         raise Channel_Error with "Failed to decode Basic.Consume-Ok";
+      end if;
+
+      Put_Line ("Consumer started: " & Consume_Ok_Method.Consumer_Tag.all);
+   end Basic_Consume;
+
+   procedure Basic_Get (
+      Chan : in out Channel;
+      Msg : out Message;
+      Success : out Boolean
+   ) is
+      use Ada.Text_IO;
+      use Ada.Streams;
+      Deliver_Method : Methods.Basic_Deliver;
+      Header_Method : Methods.Content_Header;
+      Args_Buf : Buffer;
+      Class_Id : Short;
+      Method_Id : Short;
+      F : Frame;
+   begin
+      Success := False;
+
+      if Chan.State /= Open then
+         raise Channel_Error with "Channel not open";
+      end if;
+
+      Put_Line ("Waiting for message...");
+
+      -- Wait for Basic.Deliver
+      Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
+      if not Success then
+         return;
+      end if;
+
+      if Class_Id /= AMQP.Constants.CLASS_BASIC or else
+         Method_Id /= AMQP.Constants.BASIC_DELIVER
+      then
+         Success := False;
+         return;
+      end if;
+
+      Decode_Basic_Deliver (Args_Buf, Deliver_Method, Success);
+      if not Success then
+         return;
+      end if;
+
+      Put_Line ("Received Basic.Deliver");
+
+      -- Receive content header frame
+      AMQP.Connection.Receive_Frame (Chan.Conn.all, F, Success);
+      if not Success or else F.Kind /= Header_Frame then
+         Success := False;
+         return;
+      end if;
+
+      Reset (Args_Buf);
+      for I in 1 .. F.Payload.Length loop
+         Args_Buf.Data (I) := F.Payload.Data (I);
+      end loop;
+      Args_Buf.Length := F.Payload.Length;
+      Args_Buf.Position := 1;
+
+      Decode_Content_Header (Args_Buf, Header_Method, Success);
+      if not Success then
+         return;
+      end if;
+
+      Put_Line ("Received content header, body size:" & Long_Long'Image (Header_Method.Body_Size));
+
+      -- Receive body frame
+      AMQP.Connection.Receive_Frame (Chan.Conn.all, F, Success);
+      if not Success or else F.Kind /= Body_Frame then
+         Success := False;
+         return;
+      end if;
+
+      -- Extract body
+      declare
+         Body_Str : String (1 .. Integer (F.Payload.Length));
+      begin
+         for I in 1 .. F.Payload.Length loop
+            Body_Str (Integer (I)) := Character'Val (F.Payload.Data (I));
+         end loop;
+
+         Msg.Content := new String'(Body_Str);
+         Msg.Delivery_Tag := Deliver_Method.Delivery_Tag;
+         Msg.Exchange := Deliver_Method.Exchange;
+         Msg.Routing_Key := Deliver_Method.Routing_Key;
+
+         Put_Line ("Received message: " & Body_Str);
+         Success := True;
+      end;
+   end Basic_Get;
+
+   procedure Basic_Ack (
+      Chan : in out Channel;
+      Delivery_Tag : Long_Long
+   ) is
+      use Ada.Text_IO;
+      Ack_Method : Methods.Basic_Ack;
+      Args_Buf : Buffer;
+   begin
+      if Chan.State /= Open then
+         raise Channel_Error with "Channel not open";
+      end if;
+
+      Put_Line ("Acknowledging delivery tag:" & Long_Long'Image (Delivery_Tag));
+
+      Ack_Method.Delivery_Tag := Delivery_Tag;
+
+      Reset (Args_Buf);
+      Encode_Basic_Ack (Args_Buf, Ack_Method);
+      Send_Method (Chan, AMQP.Constants.CLASS_BASIC, AMQP.Constants.BASIC_ACK, Args_Buf);
+
+      Put_Line ("Sent Basic.Ack");
+   end Basic_Ack;
+
 end AMQP.Channel;

@@ -245,6 +245,189 @@ package body AMQP.Methods is
       Success := True;  -- No fields to decode
    end Decode_Channel_Close_Ok;
 
+   -- Encode Queue.Declare
+   procedure Encode_Queue_Declare (
+      Buf : in out Buffer;
+      Method : Queue_Declare
+   ) is
+      Flags : Octet := 0;
+   begin
+      Encode_Short (Buf, Method.Reserved_1);
+      Encode_Short_String (Buf, Method.Queue.all);
+
+      if Method.Passive then
+         Flags := Flags or 16#01#;
+      end if;
+      if Method.Durable then
+         Flags := Flags or 16#02#;
+      end if;
+      if Method.Exclusive then
+         Flags := Flags or 16#04#;
+      end if;
+      if Method.Auto_Delete then
+         Flags := Flags or 16#08#;
+      end if;
+      if Method.No_Wait then
+         Flags := Flags or 16#10#;
+      end if;
+
+      Encode_Octet (Buf, Flags);
+      Encode_Field_Table (Buf, Method.Arguments);
+   end Encode_Queue_Declare;
+
+   -- Decode Queue.Declare-Ok
+   procedure Decode_Queue_Declare_Ok (
+      Buf : in out Buffer;
+      Method : out Queue_Declare_Ok;
+      Success : out Boolean
+   ) is
+      Queue_Str : Short_String;
+   begin
+      Decode_Short_String (Buf, Queue_Str);
+      Method.Queue := String_Access (Queue_Str);
+      Decode_Long (Buf, Method.Message_Count);
+      Decode_Long (Buf, Method.Consumer_Count);
+      Success := True;
+   end Decode_Queue_Declare_Ok;
+
+   -- Encode Basic.Publish
+   procedure Encode_Basic_Publish (
+      Buf : in out Buffer;
+      Method : Basic_Publish
+   ) is
+      Flags : Octet := 0;
+   begin
+      Encode_Short (Buf, Method.Reserved_1);
+      Encode_Short_String (Buf, Method.Exchange.all);
+      Encode_Short_String (Buf, Method.Routing_Key.all);
+
+      if Method.Mandatory then
+         Flags := Flags or 16#01#;
+      end if;
+      if Method.Immediate then
+         Flags := Flags or 16#02#;
+      end if;
+
+      Encode_Octet (Buf, Flags);
+   end Encode_Basic_Publish;
+
+   -- Encode Basic.Consume
+   procedure Encode_Basic_Consume (
+      Buf : in out Buffer;
+      Method : Basic_Consume
+   ) is
+      Flags : Octet := 0;
+   begin
+      Encode_Short (Buf, Method.Reserved_1);
+      Encode_Short_String (Buf, Method.Queue.all);
+      Encode_Short_String (Buf, Method.Consumer_Tag.all);
+
+      if Method.No_Local then
+         Flags := Flags or 16#01#;
+      end if;
+      if Method.No_Ack then
+         Flags := Flags or 16#02#;
+      end if;
+      if Method.Exclusive then
+         Flags := Flags or 16#04#;
+      end if;
+      if Method.No_Wait then
+         Flags := Flags or 16#08#;
+      end if;
+
+      Encode_Octet (Buf, Flags);
+      Encode_Field_Table (Buf, Method.Arguments);
+   end Encode_Basic_Consume;
+
+   -- Encode Basic.Ack
+   procedure Encode_Basic_Ack (
+      Buf : in out Buffer;
+      Method : Basic_Ack
+   ) is
+      Flags : Octet := 0;
+   begin
+      Encode_Long_Long (Buf, Method.Delivery_Tag);
+
+      if Method.Multiple then
+         Flags := Flags or 16#01#;
+      end if;
+
+      Encode_Octet (Buf, Flags);
+   end Encode_Basic_Ack;
+
+   -- Encode Content Header
+   procedure Encode_Content_Header (
+      Buf : in out Buffer;
+      Method : Content_Header
+   ) is
+   begin
+      Encode_Short (Buf, Method.Class_Id);
+      Encode_Short (Buf, Method.Weight);
+      Encode_Long_Long (Buf, Method.Body_Size);
+      -- Property flags and properties would be encoded here
+      -- For now, encode empty property flags
+      Encode_Short (Buf, 0);
+   end Encode_Content_Header;
+
+   -- Decode Basic.Consume-Ok
+   procedure Decode_Basic_Consume_Ok (
+      Buf : in out Buffer;
+      Method : out Basic_Consume_Ok;
+      Success : out Boolean
+   ) is
+      Tag : Short_String;
+   begin
+      Decode_Short_String (Buf, Tag);
+      Method.Consumer_Tag := String_Access (Tag);
+      Success := True;
+   end Decode_Basic_Consume_Ok;
+
+   -- Decode Basic.Deliver
+   procedure Decode_Basic_Deliver (
+      Buf : in out Buffer;
+      Method : out Basic_Deliver;
+      Success : out Boolean
+   ) is
+      Tag : Short_String;
+      Exch : Short_String;
+      RKey : Short_String;
+      Flags : Octet;
+   begin
+      Decode_Short_String (Buf, Tag);
+      Method.Consumer_Tag := String_Access (Tag);
+
+      Decode_Long_Long (Buf, Method.Delivery_Tag);
+
+      Decode_Octet (Buf, Flags);
+      Method.Redelivered := (Flags and 16#01#) /= 0;
+
+      Decode_Short_String (Buf, Exch);
+      Method.Exchange := String_Access (Exch);
+
+      Decode_Short_String (Buf, RKey);
+      Method.Routing_Key := String_Access (RKey);
+
+      Success := True;
+   end Decode_Basic_Deliver;
+
+   -- Decode Content Header
+   procedure Decode_Content_Header (
+      Buf : in out Buffer;
+      Method : out Content_Header;
+      Success : out Boolean
+   ) is
+      Property_Flags : Short;
+   begin
+      Decode_Short (Buf, Method.Class_Id);
+      Decode_Short (Buf, Method.Weight);
+      Decode_Long_Long (Buf, Method.Body_Size);
+
+      -- Read property flags (simplified - just skip for now)
+      Decode_Short (Buf, Property_Flags);
+
+      Success := True;
+   end Decode_Content_Header;
+
    -- Create PLAIN authentication response
    -- Format: \0username\0password
    function Create_Plain_Auth_Response (

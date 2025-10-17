@@ -81,6 +81,74 @@ package AMQP.Methods is
    -- Channel.Close-Ok (bidirectional)
    type Channel_Close_Ok is null record;
 
+   -- Queue.Declare (client -> server)
+   type Queue_Declare is record
+      Reserved_1 : Short := 0;          -- Deprecated
+      Queue : String_Access;            -- Queue name (empty = server-generated)
+      Passive : Boolean := False;       -- Only check if queue exists
+      Durable : Boolean := False;       -- Survive server restart
+      Exclusive : Boolean := False;     -- Used by only one connection
+      Auto_Delete : Boolean := False;   -- Delete when unused
+      No_Wait : Boolean := False;       -- Don't wait for reply
+      Arguments : Field_Table;          -- Optional arguments
+   end record;
+
+   -- Queue.Declare-Ok (server -> client)
+   type Queue_Declare_Ok is record
+      Queue : String_Access;            -- Queue name
+      Message_Count : Long;             -- Number of messages
+      Consumer_Count : Long;            -- Number of consumers
+   end record;
+
+   -- Basic.Publish (client -> server)
+   type Basic_Publish is record
+      Reserved_1 : Short := 0;          -- Deprecated
+      Exchange : String_Access;         -- Exchange name
+      Routing_Key : String_Access;      -- Routing key
+      Mandatory : Boolean := False;     -- Return if unroutable
+      Immediate : Boolean := False;     -- Return if no consumers (deprecated)
+   end record;
+
+   -- Basic.Consume (client -> server)
+   type Basic_Consume is record
+      Reserved_1 : Short := 0;          -- Deprecated
+      Queue : String_Access;            -- Queue name
+      Consumer_Tag : String_Access;     -- Consumer identifier
+      No_Local : Boolean := False;      -- Don't send to same connection
+      No_Ack : Boolean := False;        -- No acknowledgment needed
+      Exclusive : Boolean := False;     -- Exclusive consumer
+      No_Wait : Boolean := False;       -- Don't wait for reply
+      Arguments : Field_Table;          -- Optional arguments
+   end record;
+
+   -- Basic.Consume-Ok (server -> client)
+   type Basic_Consume_Ok is record
+      Consumer_Tag : String_Access;     -- Consumer identifier
+   end record;
+
+   -- Basic.Deliver (server -> client)
+   type Basic_Deliver is record
+      Consumer_Tag : String_Access;     -- Consumer identifier
+      Delivery_Tag : Long_Long;         -- Server-assigned delivery tag
+      Redelivered : Boolean;            -- Message was redelivered
+      Exchange : String_Access;         -- Exchange name
+      Routing_Key : String_Access;      -- Routing key
+   end record;
+
+   -- Basic.Ack (client -> server)
+   type Basic_Ack is record
+      Delivery_Tag : Long_Long;         -- Delivery tag to acknowledge
+      Multiple : Boolean := False;      -- Ack all up to this tag
+   end record;
+
+   -- Content header (for messages)
+   type Content_Header is record
+      Class_Id : Short;                 -- Always CLASS_BASIC for messages
+      Weight : Short := 0;              -- Deprecated
+      Body_Size : Long_Long;            -- Total message body size
+      -- Property flags and properties would go here (simplified for now)
+   end record;
+
    -- Encoding procedures
    procedure Encode_Connection_Start_Ok (
       Buf : in out Buffer;
@@ -170,6 +238,59 @@ package AMQP.Methods is
    procedure Decode_Channel_Close_Ok (
       Buf : in out Buffer;
       Method : out Channel_Close_Ok;
+      Success : out Boolean
+   );
+
+   -- Queue method encoding
+   procedure Encode_Queue_Declare (
+      Buf : in out Buffer;
+      Method : Queue_Declare
+   );
+
+   -- Queue method decoding
+   procedure Decode_Queue_Declare_Ok (
+      Buf : in out Buffer;
+      Method : out Queue_Declare_Ok;
+      Success : out Boolean
+   );
+
+   -- Basic method encoding
+   procedure Encode_Basic_Publish (
+      Buf : in out Buffer;
+      Method : Basic_Publish
+   );
+
+   procedure Encode_Basic_Consume (
+      Buf : in out Buffer;
+      Method : Basic_Consume
+   );
+
+   procedure Encode_Basic_Ack (
+      Buf : in out Buffer;
+      Method : Basic_Ack
+   );
+
+   procedure Encode_Content_Header (
+      Buf : in out Buffer;
+      Method : Content_Header
+   );
+
+   -- Basic method decoding
+   procedure Decode_Basic_Consume_Ok (
+      Buf : in out Buffer;
+      Method : out Basic_Consume_Ok;
+      Success : out Boolean
+   );
+
+   procedure Decode_Basic_Deliver (
+      Buf : in out Buffer;
+      Method : out Basic_Deliver;
+      Success : out Boolean
+   );
+
+   procedure Decode_Content_Header (
+      Buf : in out Buffer;
+      Method : out Content_Header;
       Success : out Boolean
    );
 

@@ -47,6 +47,18 @@ package AMQP.Constants is
    CHANNEL_CLOSE    : constant := 40;
    CHANNEL_CLOSE_OK : constant := 41;
 
+   -- Queue method IDs
+   QUEUE_DECLARE    : constant := 10;
+   QUEUE_DECLARE_OK : constant := 11;
+   QUEUE_BIND       : constant := 20;
+   QUEUE_BIND_OK    : constant := 21;
+   QUEUE_UNBIND     : constant := 50;
+   QUEUE_UNBIND_OK  : constant := 51;
+   QUEUE_PURGE      : constant := 30;
+   QUEUE_PURGE_OK   : constant := 31;
+   QUEUE_DELETE     : constant := 40;
+   QUEUE_DELETE_OK  : constant := 41;
+
    -- Basic method IDs
    BASIC_QOS        : constant := 10;
    BASIC_QOS_OK     : constant := 11;
