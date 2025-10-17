@@ -39,6 +39,89 @@ package body AMQP.Connection is
          raise Connection_Error with "Socket connection failed: " & Exception_Message (E);
    end Connect;
 
+   procedure Close_Connection (Conn : in out Connection) is
+      use Ada.Streams;
+      Close_Method : Connection_Close;
+      Payload_Buf : Buffer;
+      F : Frame;
+      Class_Id : Short;
+      Method_Id : Short;
+      Args_Buf : Buffer;
+      Success : Boolean;
+   begin
+      if Conn.State /= Connected then
+         return;  -- Not connected, nothing to close
+      end if;
+
+      pragma Debug (Ada.Text_IO.Put_Line ("Closing AMQP connection..."));
+
+      -- Send Connection.Close
+      Close_Method.Reply_Code := AMQP.Constants.REPLY_SUCCESS;
+      Close_Method.Reply_Text := new String'("Normal shutdown");
+      Close_Method.Class_Id := 0;
+      Close_Method.Method_Id := 0;
+
+      Reset (Payload_Buf);
+      Encode_Connection_Close (Payload_Buf, Close_Method);
+
+      declare
+         Temp_Buf : Buffer;
+      begin
+         -- Build method frame payload: class_id + method_id + arguments
+         Reset (Temp_Buf);
+         Encode_Short (Temp_Buf, AMQP.Constants.CLASS_CONNECTION);
+         Encode_Short (Temp_Buf, AMQP.Constants.CONNECTION_CLOSE);
+
+         -- Copy arguments
+         for I in 1 .. Payload_Buf.Length loop
+            Temp_Buf.Data (Temp_Buf.Length + I) := Payload_Buf.Data (I);
+         end loop;
+         Temp_Buf.Length := Temp_Buf.Length + Payload_Buf.Length;
+
+         -- Create frame
+         F.Kind := Method_Frame;
+         F.Channel := 0;
+         F.Payload.Length := Temp_Buf.Length;
+
+         -- Copy payload data
+         for I in 1 .. Temp_Buf.Length loop
+            F.Payload.Data (I) := Temp_Buf.Data (I);
+         end loop;
+
+         Send_Frame (Conn, F);
+      end;
+
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Connection.Close"));
+
+      -- Wait for Connection.Close-Ok
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Connection.Close-Ok..."));
+      Receive_Frame (Conn, F, Success);
+      if Success and then F.Kind = Method_Frame then
+         Reset (Args_Buf);
+         for I in 1 .. F.Payload.Length loop
+            Args_Buf.Data (I) := F.Payload.Data (I);
+         end loop;
+         Args_Buf.Length := F.Payload.Length;
+         Args_Buf.Position := 1;
+
+         -- Decode class_id and method_id
+         Decode_Short (Args_Buf, Class_Id);
+         Decode_Short (Args_Buf, Method_Id);
+
+         if Class_Id = AMQP.Constants.CLASS_CONNECTION and then
+            Method_Id = AMQP.Constants.CONNECTION_CLOSE_OK
+         then
+            pragma Debug (Ada.Text_IO.Put_Line ("Received Connection.Close-Ok"));
+         end if;
+      end if;
+
+      Conn.State := Closed;
+
+   exception
+      when others =>
+         Conn.State := Closed;
+   end Close_Connection;
+
    procedure Disconnect (Conn : in out Connection) is
       use GNAT.Sockets;
    begin
@@ -46,13 +129,15 @@ package body AMQP.Connection is
          return;
       end if;
 
-      Conn.State := Closing;
+      -- Perform proper AMQP close if connected
+      if Conn.State = Connected then
+         Close_Connection (Conn);
+      end if;
 
       -- Close socket
       Close_Socket (Conn.Socket);
 
-      Conn.State := Closed;
-      Conn.State := Disconnected;  -- Ready for reconnect
+      Conn.State := Disconnected;
 
    exception
       when Socket_Error =>
