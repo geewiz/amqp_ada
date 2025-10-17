@@ -534,4 +534,14 @@ package body AMQP.Connection is
          raise Connection_Error with "Handshake failed: " & Exception_Message (E);
    end Perform_Handshake;
 
+   procedure Connect_And_Authenticate (
+      Conn : in out Connection;
+      Config : Connection_Config
+   ) is
+   begin
+      Connect (Conn, Config);
+      Send_Protocol_Header (Conn);
+      Perform_Handshake (Conn);
+   end Connect_And_Authenticate;
+
 end AMQP.Connection;

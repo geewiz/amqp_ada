@@ -43,11 +43,9 @@ begin
    Config.Heartbeat := 60;
 
    begin
-      -- Connect and handshake
+      -- Connect and authenticate
       Put_Line ("Connecting to RabbitMQ...");
-      Connect (Conn, Config);
-      Send_Protocol_Header (Conn);
-      Perform_Handshake (Conn);
+      Connect_And_Authenticate (Conn, Config);
       Put_Line ("Connected!");
       New_Line;
 

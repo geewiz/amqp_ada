@@ -48,6 +48,12 @@ package AMQP.Connection is
    function Is_Connected (Conn : Connection) return Boolean;
    function Get_State (Conn : Connection) return Connection_State;
 
+   -- Convenience method: Connect, send protocol header, and perform handshake in one call
+   procedure Connect_And_Authenticate (
+      Conn : in out Connection;
+      Config : Connection_Config
+   );
+
    -- Frame I/O
    procedure Send_Frame (
       Conn : in out Connection;

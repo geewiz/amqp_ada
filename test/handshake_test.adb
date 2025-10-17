@@ -24,20 +24,11 @@ begin
    New_Line;
 
    begin
-      -- Establish TCP connection
-      Connect (Conn, Config);
-      Put_Line ("[PASS] TCP connection established");
-
-      -- Send protocol header
-      Send_Protocol_Header (Conn);
-      Put_Line ("[PASS] Protocol header sent");
+      -- Connect and authenticate using convenience method
+      Connect_And_Authenticate (Conn, Config);
       New_Line;
 
-      -- Perform handshake
-      Perform_Handshake (Conn);
-      New_Line;
-
-      Put_Line ("[PASS] Connection handshake successful!");
+      Put_Line ("[PASS] Connection and authentication successful!");
       Put_Line ("  State: " & Get_State (Conn)'Image);
 
       -- Disconnect
