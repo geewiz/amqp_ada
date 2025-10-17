@@ -165,6 +165,86 @@ package body AMQP.Methods is
       Success := True;  -- No fields to decode
    end Decode_Connection_Close_Ok;
 
+   -- Encode Channel.Open
+   procedure Encode_Channel_Open (
+      Buf : in out Buffer;
+      Method : Channel_Open
+   ) is
+      pragma Unreferenced (Method);
+   begin
+      Encode_Short_String (Buf, "");  -- Reserved (deprecated)
+   end Encode_Channel_Open;
+
+   -- Encode Channel.Close
+   procedure Encode_Channel_Close (
+      Buf : in out Buffer;
+      Method : Channel_Close
+   ) is
+   begin
+      Encode_Short (Buf, Method.Reply_Code);
+      Encode_Short_String (Buf, Method.Reply_Text.all);
+      Encode_Short (Buf, Method.Class_Id);
+      Encode_Short (Buf, Method.Method_Id);
+   end Encode_Channel_Close;
+
+   -- Encode Channel.Close-Ok
+   procedure Encode_Channel_Close_Ok (
+      Buf : in out Buffer;
+      Method : Channel_Close_Ok
+   ) is
+      pragma Unreferenced (Buf, Method);
+   begin
+      null;  -- No fields
+   end Encode_Channel_Close_Ok;
+
+   -- Decode Channel.Open-Ok
+   procedure Decode_Channel_Open_Ok (
+      Buf : in out Buffer;
+      Method : out Channel_Open_Ok;
+      Success : out Boolean
+   ) is
+      Reserved_Str : Short_String;
+   begin
+      Decode_Short_String (Buf, Reserved_Str);
+      Method.Reserved := String_Access (Reserved_Str);
+      Success := True;
+   end Decode_Channel_Open_Ok;
+
+   -- Decode Channel.Close
+   procedure Decode_Channel_Close (
+      Buf : in out Buffer;
+      Method : out Channel_Close;
+      Success : out Boolean
+   ) is
+      Text : Short_String;
+      use Ada.Streams;
+   begin
+      -- Minimum check for reply_code + text length + class_id + method_id
+      if Buf.Length - Buf.Position + 1 < Stream_Element_Offset (6) then
+         Success := False;
+         return;
+      end if;
+
+      Decode_Short (Buf, Method.Reply_Code);
+      Decode_Short_String (Buf, Text);
+      Method.Reply_Text := String_Access (Text);
+      Decode_Short (Buf, Method.Class_Id);
+      Decode_Short (Buf, Method.Method_Id);
+
+      Success := True;
+   end Decode_Channel_Close;
+
+   -- Decode Channel.Close-Ok
+   procedure Decode_Channel_Close_Ok (
+      Buf : in out Buffer;
+      Method : out Channel_Close_Ok;
+      Success : out Boolean
+   ) is
+      pragma Unreferenced (Buf, Method);
+   begin
+      Success := True;  -- No fields to decode
+   end Decode_Channel_Close_Ok;
+
    -- Create PLAIN authentication response
    -- Format: \0username\0password
    function Create_Plain_Auth_Response (

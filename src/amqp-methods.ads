@@ -60,6 +60,27 @@ package AMQP.Methods is
    -- Connection.Close-Ok (bidirectional)
    type Connection_Close_Ok is null record;
 
+   -- Channel.Open (client -> server)
+   type Channel_Open is record
+      Reserved : String_Access;  -- Deprecated
+   end record;
+
+   -- Channel.Open-Ok (server -> client)
+   type Channel_Open_Ok is record
+      Reserved : String_Access;  -- Deprecated
+   end record;
+
+   -- Channel.Close (bidirectional)
+   type Channel_Close is record
+      Reply_Code : Short;
+      Reply_Text : String_Access;
+      Class_Id : Short;
+      Method_Id : Short;
+   end record;
+
+   -- Channel.Close-Ok (bidirectional)
+   type Channel_Close_Ok is null record;
+
    -- Encoding procedures
    procedure Encode_Connection_Start_Ok (
       Buf : in out Buffer;
@@ -114,6 +135,41 @@ package AMQP.Methods is
    procedure Decode_Connection_Close_Ok (
       Buf : in out Buffer;
       Method : out Connection_Close_Ok;
+      Success : out Boolean
+   );
+
+   -- Channel method encoding
+   procedure Encode_Channel_Open (
+      Buf : in out Buffer;
+      Method : Channel_Open
+   );
+
+   procedure Encode_Channel_Close (
+      Buf : in out Buffer;
+      Method : Channel_Close
+   );
+
+   procedure Encode_Channel_Close_Ok (
+      Buf : in out Buffer;
+      Method : Channel_Close_Ok
+   );
+
+   -- Channel method decoding
+   procedure Decode_Channel_Open_Ok (
+      Buf : in out Buffer;
+      Method : out Channel_Open_Ok;
+      Success : out Boolean
+   );
+
+   procedure Decode_Channel_Close (
+      Buf : in out Buffer;
+      Method : out Channel_Close;
+      Success : out Boolean
+   );
+
+   procedure Decode_Channel_Close_Ok (
+      Buf : in out Buffer;
+      Method : out Channel_Close_Ok;
       Success : out Boolean
    );
 
