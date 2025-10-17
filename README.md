@@ -4,50 +4,89 @@ An Ada implementation of the AMQP 0-9-1 protocol for connecting to message broke
 
 ## Project Status
 
-This is an early-stage implementation with basic infrastructure in place.
+Functional AMQP client library with core messaging operations implemented and tested against RabbitMQ.
 
 ### Completed
 - [x] Project structure and build configuration
 - [x] Basic AMQP types (Octet, Short, Long, Long_Long)
 - [x] Protocol constants (frame types, class IDs, method IDs)
-- [x] Basic codec (encoding/decoding primitives)
-- [x] Field table structure definitions
-- [x] Frame processing layer
+- [x] Binary encoding/decoding (primitives, strings, field tables)
+- [x] Frame processing (assembly, disassembly, validation)
 - [x] Socket connection management (using GNAT.Sockets)
+- [x] Connection handshake (Start, Tune, Open)
+- [x] PLAIN authentication mechanism
+- [x] Channel management (open, close, multiplexing)
+- [x] Queue.Declare operation
+- [x] Basic.Publish implementation
+- [x] Basic.Consume implementation
+- [x] Basic.Get for receiving messages
+- [x] Basic.Ack for message acknowledgment
+- [x] Debug output system (pragma Debug with compile-time control)
+- [x] Makefile for building and testing
+- [x] Comprehensive test suite
 
-### In Progress / TODO
-- [ ] Connection handshake (Start, Tune, Open)
-- [ ] Channel management
-- [ ] Basic.Publish implementation
-- [ ] Basic.Consume implementation
-- [ ] Queue/Exchange operations
-- [ ] Acknowledgments and confirms
-- [ ] Error handling and recovery
+### TODO
+- [ ] Exchange operations (declare, bind, delete)
+- [ ] Additional queue operations (bind, unbind, purge, delete)
+- [ ] Basic.Nack and Basic.Reject
+- [ ] QoS settings (prefetch count/size)
+- [ ] Consumer cancellation (Basic.Cancel)
+- [ ] Message properties (content-type, headers, etc.)
+- [ ] Publisher confirms
+- [ ] Transactions (Tx class)
 - [ ] Heartbeat mechanism
+- [ ] Error recovery and reconnection logic
 - [ ] TLS/SSL support
+- [ ] Memory cleanup (proper deallocation of access types)
 
 ## Building
 
+### Using Make (Recommended)
+
 ```bash
-gprbuild -P amqp.gpr
+make              # Build release version (default)
+make build        # Same as above
+make debug        # Build with debug output enabled
+make clean        # Remove build artifacts
+make clean-all    # Remove all generated files including binaries
+make test         # Build and run all tests (requires RabbitMQ)
+make help         # Show all available targets
 ```
+
+### Using GPRBuild Directly
+
+```bash
+# Release build (no debug output)
+gprbuild -P amqp.gpr
+
+# Debug build (with verbose protocol output)
+gprbuild -P amqp_debug.gpr
+```
+
+Executables are built into the `test/` directory.
 
 ## Running Tests
 
-### Start RabbitMQ (for connection tests)
+### Start RabbitMQ
 
 ```bash
-docker run -d --rm --name rabbitmq -p 5672:5672 rabbitmq:3
+docker run -d --rm --name rabbitmq -p 5672:5672 rabbitmq:3-management
 ```
 
-### Run Tests
+### Run Individual Tests
 
 ```bash
-# Basic tests (codec, frames) - run inside distrobox
-distrobox enter fedora-42-dev -- /var/home/geewiz/Projects/src/geewiz/amqp_ada/bin/amqp_test
+./test/amqp_test         # Basic codec and frame tests
+./test/connection_test   # Socket connection test
+./test/handshake_test    # AMQP handshake test
+./test/channel_test      # Channel management test
+./test/pubsub_test       # Complete publish/subscribe test
+```
 
-# Connection test (requires RabbitMQ running on localhost:5672)
-distrobox enter fedora-42-dev -- /var/home/geewiz/Projects/src/geewiz/amqp_ada/bin/connection_test
+### Run All Tests
+
+```bash
+make test
 ```
 
 ### Stop RabbitMQ
@@ -62,62 +101,72 @@ docker stop rabbitmq
 
 ```
 AMQP                      -- Root package, version info, exceptions
-├── AMQP.Constants        -- Protocol constants (frame types, method IDs)
-├── AMQP.Types            -- Basic types and data structures
-├── AMQP.Codec            -- Encoding/decoding operations
-├── AMQP.Frames          -- Frame assembly/disassembly (TODO)
-├── AMQP.Connection      -- Connection management (TODO)
-├── AMQP.Channel         -- Channel operations (TODO)
-└── AMQP.Methods         -- Method implementations (TODO)
+├── AMQP.Constants        -- Protocol constants (frame types, method IDs, reply codes)
+├── AMQP.Types            -- Basic types (Octet, Short, Long, etc.) and field tables
+├── AMQP.Codec            -- Binary encoding/decoding operations
+├── AMQP.Frames           -- Frame assembly/disassembly and validation
+├── AMQP.Connection       -- Connection management (handshake, send/receive frames)
+├── AMQP.Channel          -- Channel operations (open, close, queue, basic methods)
+└── AMQP.Methods          -- AMQP method structures and encoding/decoding
 ```
 
 ### Implementation Phases
 
-**Phase 1: Foundation (Current)**
+**Phase 1: Foundation** ✅ **Complete**
 - Core types and constants
 - Binary encoding/decoding
 - Frame structure
 
-**Phase 2: Network Layer**
+**Phase 2: Network Layer** ✅ **Complete**
 - TCP socket connection
 - Frame sending/receiving
-- Heartbeat handling
+- Buffer management
 
-**Phase 3: Connection Management**
+**Phase 3: Connection Management** ✅ **Complete**
 - Connection handshake (Start, Tune, Open)
 - Authentication (PLAIN mechanism)
 - Connection close
+- Parameter negotiation
 
-**Phase 4: Channel Operations**
+**Phase 4: Channel Operations** ✅ **Complete**
 - Channel open/close
 - Channel multiplexing
-- Flow control
+- Basic error handling
 
-**Phase 5: Basic Operations**
-- Queue declare/bind/delete
-- Exchange declare/bind/delete
-- Basic.Publish
-- Basic.Consume
-- Basic.Ack/Nack/Reject
+**Phase 5: Basic Operations** ✅ **Partially Complete**
+- Queue.Declare ✅
+- Basic.Publish ✅
+- Basic.Consume ✅
+- Basic.Get ✅
+- Basic.Ack ✅
+- Queue bind/unbind ⏳
+- Exchange operations ⏳
+- Basic.Nack/Reject ⏳
 
-**Phase 6: Advanced Features**
+**Phase 6: Advanced Features** ⏳ **Not Started**
 - Transactions (Tx class)
 - Publisher confirms
 - Consumer cancellation
 - Message properties
+- Heartbeat mechanism
+- Error recovery
 
 ## Design Decisions
 
-### Concurrency Model
- Use Ada tasks for asynchronous message delivery
- Protected objects for shared state (channels, pending confirms)
- One reader task per connection
- Separate task per consumer
+### Synchronous API
+- Currently implemented as synchronous/blocking operations
+- Simple and predictable for basic use cases
+- Future: Add asynchronous/task-based API for concurrent consumers
 
 ### Memory Management
-- Controlled types for automatic resource cleanup
 - Access types for dynamic structures (field tables, strings)
-- Consider using storage pools for message buffers
+- Manual cleanup required (TODO: implement Controlled types for automatic resource cleanup)
+- Fixed-size buffers for frame processing (8KB default)
+
+### Debug Output
+- Uses `pragma Debug` for compile-time control
+- Zero runtime overhead in release builds
+- Enabled with `make debug` or `gprbuild -P amqp_debug.gpr`
 
 ## Key Challenges
 
@@ -127,51 +176,84 @@ AMQP                      -- Root package, version info, exceptions
 4. **Content Frames**: Handling split content (header + body frames)
 5. **Error Recovery**: Proper connection/channel error handling
 
-## Example Usage (Planned)
+## Example Usage
 
 ```ada
-with AMQP.Connection;
-with AMQP.Channel;
+with AMQP.Connection; use AMQP.Connection;
+with AMQP.Channel; use AMQP.Channel;
 
 procedure Example is
-   Conn : AMQP.Connection.Connection_Type;
-   Chan : AMQP.Channel.Channel_Type;
+   Conn : aliased Connection;
+   Chan : aliased Channel;
+   Config : Connection_Config;
+   Msg : Message;
+   Success : Boolean;
 begin
-   -- Connect
-   Conn.Connect (Host => "localhost", Port => 5672,
-                 User => "guest", Password => "guest");
+   -- Configure connection
+   Config.Host := new String'("localhost");
+   Config.Port := 5672;
+   Config.Virtual_Host := new String'("/");
+   Config.Username := new String'("guest");
+   Config.Password := new String'("guest");
+   Config.Frame_Max := 131072;
+   Config.Heartbeat := 60;
+
+   -- Connect and perform handshake
+   Connect (Conn, Config);
+   Send_Protocol_Header (Conn);
+   Perform_Handshake (Conn);
 
    -- Open channel
-   Chan := Conn.Create_Channel;
+   Open (Chan, Conn'Unchecked_Access, 1);
 
    -- Declare queue
-   Chan.Queue_Declare (Queue => "test_queue", Durable => True);
+   Queue_Declare (
+      Chan,
+      Queue => "test_queue",
+      Durable => False,
+      Exclusive => False,
+      Auto_Delete => True
+   );
 
    -- Publish message
-   Chan.Basic_Publish (
-      Exchange => "",
+   Basic_Publish (
+      Chan        => Chan,
+      Exchange    => "",
       Routing_Key => "test_queue",
-      Body => "Hello, AMQP!"
+      Message_Body => "Hello, AMQP!"
    );
 
-   -- Consume
-   Chan.Basic_Consume (
+   -- Start consumer
+   Basic_Consume (
+      Chan,
       Queue => "test_queue",
-      Callback => My_Message_Handler'Access
+      Consumer_Tag => "my_consumer",
+      No_Ack => False
    );
+
+   -- Receive message
+   Basic_Get (Chan, Msg, Success);
+   if Success then
+      -- Process message
+      Ada.Text_IO.Put_Line ("Received: " & Msg.Content.all);
+
+      -- Acknowledge
+      Basic_Ack (Chan, Msg.Delivery_Tag);
+   end if;
 
    -- Cleanup
-   Chan.Close;
-   Conn.Close;
+   Close (Chan);
+   Disconnect (Conn);
 end Example;
 ```
 
 ## Testing Strategy
 
-1. **Unit Tests**: Test codec, frame processing independently
-2. **Integration Tests**: Connect to local RabbitMQ instance
-3. **Interoperability**: Test against official AMQP test suite
-4. **Performance**: Benchmark throughput and latency
+1. **Unit Tests** ✅: Codec and frame processing (`amqp_test`)
+2. **Integration Tests** ✅: Connection, handshake, channels against RabbitMQ
+3. **End-to-End Tests** ✅: Complete publish/subscribe workflow (`pubsub_test`)
+4. **Interoperability** ⏳: Test against official AMQP test suite (planned)
+5. **Performance** ⏳: Benchmark throughput and latency (planned)
 
 ## Resources
 
