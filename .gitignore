@@ -1,0 +1,32 @@
+# Ada/GNAT build artifacts
+obj/
+*.o
+*.ali
+*.lexch
+*.bexch
+b~*.ad[sb]
+b__*.ad[sb]
+
+# Executables
+bin/
+*.exe
+
+# GNAT project files (generated)
+*.cgpr
+
+# Editor/IDE files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+*.gpr.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.log
