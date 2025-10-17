@@ -13,6 +13,11 @@ package AMQP.Connection is
       Disconnected,
       Connecting,
       Protocol_Header_Sent,
+      Start_Received,
+      Start_Ok_Sent,
+      Tune_Received,
+      Tune_Ok_Sent,
+      Open_Sent,
       Connected,
       Closing,
       Closed
@@ -58,6 +63,9 @@ package AMQP.Connection is
    -- Protocol header
    procedure Send_Protocol_Header (Conn : in out Connection);
 
+   -- Connection handshake
+   procedure Perform_Handshake (Conn : in out Connection);
+
 private
 
    type Connection is tagged limited record
@@ -66,6 +74,10 @@ private
       State : Connection_State := Disconnected;
       Config : Connection_Config;
       Receive_Buffer : Buffer;
+      -- Negotiated parameters
+      Negotiated_Channel_Max : Short := 0;
+      Negotiated_Frame_Max : Long := 0;
+      Negotiated_Heartbeat : Short := 0;
    end record;
 
 end AMQP.Connection;
