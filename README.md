@@ -12,10 +12,10 @@ This is an early-stage implementation with basic infrastructure in place.
 - [x] Protocol constants (frame types, class IDs, method IDs)
 - [x] Basic codec (encoding/decoding primitives)
 - [x] Field table structure definitions
+- [x] Frame processing layer
+- [x] Socket connection management (using GNAT.Sockets)
 
 ### In Progress / TODO
-- [ ] Frame processing layer
-- [ ] Socket connection management (using GNAT.Sockets)
 - [ ] Connection handshake (Start, Tune, Open)
 - [ ] Channel management
 - [ ] Basic.Publish implementation
@@ -34,8 +34,26 @@ gprbuild -P amqp.gpr
 
 ## Running Tests
 
+### Start RabbitMQ (for connection tests)
+
 ```bash
-./bin/amqp_test
+docker run -d --rm --name rabbitmq -p 5672:5672 rabbitmq:3
+```
+
+### Run Tests
+
+```bash
+# Basic tests (codec, frames) - run inside distrobox
+distrobox enter fedora-42-dev -- /var/home/geewiz/Projects/src/geewiz/amqp_ada/bin/amqp_test
+
+# Connection test (requires RabbitMQ running on localhost:5672)
+distrobox enter fedora-42-dev -- /var/home/geewiz/Projects/src/geewiz/amqp_ada/bin/connection_test
+```
+
+### Stop RabbitMQ
+
+```bash
+docker stop rabbitmq
 ```
 
 ## Architecture
