@@ -171,7 +171,6 @@ package body AMQP.Connection is
    end Send_Protocol_Header;
 
    procedure Perform_Handshake (Conn : in out Connection) is
-      use Ada.Text_IO;
       use Ada.Streams;
       F : Frame;
       Success : Boolean;
@@ -244,10 +243,10 @@ package body AMQP.Connection is
          raise Connection_Error with "Cannot perform handshake in current state";
       end if;
 
-      Put_Line ("Starting AMQP handshake...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Starting AMQP handshake..."));
 
       -- Step 1: Wait for Connection.Start from server
-      Put_Line ("Waiting for Connection.Start...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Connection.Start..."));
       Receive_Frame (Conn, F, Success);
       if not Success or else F.Kind /= Method_Frame then
          raise Connection_Error with "Expected Connection.Start method frame";
@@ -267,7 +266,7 @@ package body AMQP.Connection is
          end if;
 
          Conn.State := Start_Received;
-         Put_Line ("Received Connection.Start");
+         pragma Debug (Ada.Text_IO.Put_Line ("Received Connection.Start"));
 
          declare
             Start_Method : Connection_Start;
@@ -277,15 +276,15 @@ package body AMQP.Connection is
                raise Connection_Error with "Failed to decode Connection.Start";
             end if;
 
-            Put_Line ("  Server version: " &
+            pragma Debug (Ada.Text_IO.Put_Line ("  Server version: " &
                Octet'Image (Start_Method.Version_Major) & "." &
-               Octet'Image (Start_Method.Version_Minor));
-            Put_Line ("  Mechanisms: " & Start_Method.Mechanisms.all);
+               Octet'Image (Start_Method.Version_Minor)));
+            pragma Debug (Ada.Text_IO.Put_Line ("  Mechanisms: " & Start_Method.Mechanisms.all));
          end;
       end;
 
       -- Step 2: Send Connection.Start-Ok
-      Put_Line ("Sending Connection.Start-Ok...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sending Connection.Start-Ok..."));
       declare
          Start_Ok : Connection_Start_Ok;
          Client_Props : Field_Table;
@@ -311,10 +310,10 @@ package body AMQP.Connection is
       end;
 
       Conn.State := Start_Ok_Sent;
-      Put_Line ("Sent Connection.Start-Ok");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Connection.Start-Ok"));
 
       -- Step 3: Wait for Connection.Tune
-      Put_Line ("Waiting for Connection.Tune...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Connection.Tune..."));
       Receive_Frame (Conn, F, Success);
       if not Success or else F.Kind /= Method_Frame then
          raise Connection_Error with "Expected Connection.Tune method frame";
@@ -334,7 +333,7 @@ package body AMQP.Connection is
          end if;
 
          Conn.State := Tune_Received;
-         Put_Line ("Received Connection.Tune");
+         pragma Debug (Ada.Text_IO.Put_Line ("Received Connection.Tune"));
 
          declare
             Tune_Method : Connection_Tune;
@@ -344,9 +343,9 @@ package body AMQP.Connection is
                raise Connection_Error with "Failed to decode Connection.Tune";
             end if;
 
-            Put_Line ("  Server offers - Channel Max: " & Short'Image (Tune_Method.Channel_Max) &
+            pragma Debug (Ada.Text_IO.Put_Line ("  Server offers - Channel Max: " & Short'Image (Tune_Method.Channel_Max) &
                       ", Frame Max: " & Long'Image (Tune_Method.Frame_Max) &
-                      ", Heartbeat: " & Short'Image (Tune_Method.Heartbeat));
+                      ", Heartbeat: " & Short'Image (Tune_Method.Heartbeat)));
 
             -- Negotiate parameters (use minimums where applicable)
             if Tune_Method.Channel_Max > 0 then
@@ -371,7 +370,7 @@ package body AMQP.Connection is
       end;
 
       -- Step 4: Send Connection.Tune-Ok
-      Put_Line ("Sending Connection.Tune-Ok...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sending Connection.Tune-Ok..."));
       declare
          Tune_Ok : Connection_Tune_Ok;
       begin
@@ -379,9 +378,9 @@ package body AMQP.Connection is
          Tune_Ok.Frame_Max := Conn.Negotiated_Frame_Max;
          Tune_Ok.Heartbeat := Conn.Negotiated_Heartbeat;
 
-         Put_Line ("  Negotiated - Channel Max: " & Short'Image (Tune_Ok.Channel_Max) &
+         pragma Debug (Ada.Text_IO.Put_Line ("  Negotiated - Channel Max: " & Short'Image (Tune_Ok.Channel_Max) &
                    ", Frame Max: " & Long'Image (Tune_Ok.Frame_Max) &
-                   ", Heartbeat: " & Short'Image (Tune_Ok.Heartbeat));
+                   ", Heartbeat: " & Short'Image (Tune_Ok.Heartbeat)));
 
          Reset (Payload_Buf);
          Encode_Connection_Tune_Ok (Payload_Buf, Tune_Ok);
@@ -393,10 +392,10 @@ package body AMQP.Connection is
       end;
 
       Conn.State := Tune_Ok_Sent;
-      Put_Line ("Sent Connection.Tune-Ok");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Connection.Tune-Ok"));
 
       -- Step 5: Send Connection.Open
-      Put_Line ("Sending Connection.Open...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sending Connection.Open..."));
       declare
          Open_Method : Connection_Open;
          VHost : Methods.String_Access;
@@ -416,10 +415,10 @@ package body AMQP.Connection is
       end;
 
       Conn.State := Open_Sent;
-      Put_Line ("Sent Connection.Open (vhost: " & Conn.Config.Virtual_Host.all & ")");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Connection.Open (vhost: " & Conn.Config.Virtual_Host.all & ")"));
 
       -- Step 6: Wait for Connection.Open-Ok
-      Put_Line ("Waiting for Connection.Open-Ok...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Connection.Open-Ok..."));
       Receive_Frame (Conn, F, Success);
       if not Success or else F.Kind /= Method_Frame then
          raise Connection_Error with "Expected Connection.Open-Ok method frame";
@@ -438,11 +437,11 @@ package body AMQP.Connection is
             raise Connection_Error with "Expected Connection.Open-Ok method";
          end if;
 
-         Put_Line ("Received Connection.Open-Ok");
+         pragma Debug (Ada.Text_IO.Put_Line ("Received Connection.Open-Ok"));
       end;
 
       Conn.State := Connected;
-      Put_Line ("AMQP handshake complete - connection established!");
+      pragma Debug (Ada.Text_IO.Put_Line ("AMQP handshake complete - connection established!"));
 
    exception
       when E : others =>

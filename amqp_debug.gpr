@@ -1,0 +1,5 @@
+project AMQP_Debug extends "amqp.gpr" is
+   package Compiler is
+      for Default_Switches ("Ada") use AMQP.Compiler'Default_Switches ("Ada") & ("-gnata");
+   end Compiler;
+end AMQP_Debug;

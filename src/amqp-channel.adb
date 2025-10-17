@@ -94,7 +94,6 @@ package body AMQP.Channel is
       Conn : Connection_Access;
       Channel_Number : AMQP.Types.Channel_Number
    ) is
-      use Ada.Text_IO;
       Open_Method : Channel_Open;
       Open_Ok_Method : Channel_Open_Ok;
       Args_Buf : Buffer;
@@ -114,7 +113,7 @@ package body AMQP.Channel is
       Chan.Number := Channel_Number;
       Chan.State := Opening;
 
-      Put_Line ("Opening channel" & Channel_Number'Image & "...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Opening channel" & Channel_Number'Image & "..."));
 
       -- Send Channel.Open
       Open_Method.Reserved := new String'("");
@@ -122,10 +121,10 @@ package body AMQP.Channel is
       Encode_Channel_Open (Args_Buf, Open_Method);
       Send_Method (Chan, AMQP.Constants.CLASS_CHANNEL, AMQP.Constants.CHANNEL_OPEN, Args_Buf);
 
-      Put_Line ("Sent Channel.Open");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Channel.Open"));
 
       -- Wait for Channel.Open-Ok
-      Put_Line ("Waiting for Channel.Open-Ok...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Channel.Open-Ok..."));
       Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
       if not Success then
          Chan.State := Closed;
@@ -146,11 +145,10 @@ package body AMQP.Channel is
       end if;
 
       Chan.State := Open;
-      Put_Line ("Channel" & Channel_Number'Image & " opened successfully");
+      pragma Debug (Ada.Text_IO.Put_Line ("Channel" & Channel_Number'Image & " opened successfully"));
    end Open;
 
    procedure Close (Chan : in out Channel) is
-      use Ada.Text_IO;
       Close_Method : Channel_Close;
       Close_Ok_Method : Channel_Close_Ok;
       Args_Buf : Buffer;
@@ -163,7 +161,7 @@ package body AMQP.Channel is
       end if;
 
       Chan.State := Closing;
-      Put_Line ("Closing channel" & Chan.Number'Image & "...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Closing channel" & Chan.Number'Image & "..."));
 
       -- Send Channel.Close
       Close_Method.Reply_Code := AMQP.Constants.REPLY_SUCCESS;
@@ -175,10 +173,10 @@ package body AMQP.Channel is
       Encode_Channel_Close (Args_Buf, Close_Method);
       Send_Method (Chan, AMQP.Constants.CLASS_CHANNEL, AMQP.Constants.CHANNEL_CLOSE, Args_Buf);
 
-      Put_Line ("Sent Channel.Close");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Channel.Close"));
 
       -- Wait for Channel.Close-Ok
-      Put_Line ("Waiting for Channel.Close-Ok...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Channel.Close-Ok..."));
       Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
       if not Success then
          Chan.State := Closed;
@@ -192,7 +190,7 @@ package body AMQP.Channel is
       end if;
 
       Chan.State := Closed;
-      Put_Line ("Channel" & Chan.Number'Image & " closed successfully");
+      pragma Debug (Ada.Text_IO.Put_Line ("Channel" & Chan.Number'Image & " closed successfully"));
    end Close;
 
    function Is_Open (Chan : Channel) return Boolean is
@@ -217,7 +215,6 @@ package body AMQP.Channel is
       Exclusive : Boolean := False;
       Auto_Delete : Boolean := False
    ) is
-      use Ada.Text_IO;
       Declare_Method : Methods.Queue_Declare;
       Declare_Ok_Method : Methods.Queue_Declare_Ok;
       Args_Buf : Buffer;
@@ -229,7 +226,7 @@ package body AMQP.Channel is
          raise Channel_Error with "Channel not open";
       end if;
 
-      Put_Line ("Declaring queue: " & Queue);
+      pragma Debug (Ada.Text_IO.Put_Line ("Declaring queue: " & Queue));
 
       -- Setup Queue.Declare
       Declare_Method.Queue := new String'(Queue);
@@ -242,10 +239,10 @@ package body AMQP.Channel is
       Encode_Queue_Declare (Args_Buf, Declare_Method);
       Send_Method (Chan, AMQP.Constants.CLASS_QUEUE, AMQP.Constants.QUEUE_DECLARE, Args_Buf);
 
-      Put_Line ("Sent Queue.Declare");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Queue.Declare"));
 
       -- Wait for Queue.Declare-Ok
-      Put_Line ("Waiting for Queue.Declare-Ok...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Queue.Declare-Ok..."));
       Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
       if not Success then
          raise Channel_Error with "Failed to receive Queue.Declare-Ok";
@@ -262,7 +259,7 @@ package body AMQP.Channel is
          raise Channel_Error with "Failed to decode Queue.Declare-Ok";
       end if;
 
-      Put_Line ("Queue declared: " & Declare_Ok_Method.Queue.all);
+      pragma Debug (Ada.Text_IO.Put_Line ("Queue declared: " & Declare_Ok_Method.Queue.all));
    end Queue_Declare;
 
    procedure Basic_Publish (
@@ -271,7 +268,6 @@ package body AMQP.Channel is
       Routing_Key : String;
       Message_Body : String
    ) is
-      use Ada.Text_IO;
       use Ada.Streams;
       Publish_Method : Methods.Basic_Publish;
       Header_Method : Methods.Content_Header;
@@ -282,7 +278,7 @@ package body AMQP.Channel is
          raise Channel_Error with "Channel not open";
       end if;
 
-      Put_Line ("Publishing message to exchange='" & Exchange & "' routing_key='" & Routing_Key & "'");
+      pragma Debug (Ada.Text_IO.Put_Line ("Publishing message to exchange='" & Exchange & "' routing_key='" & Routing_Key & "'"));
 
       -- Send Basic.Publish method
       Publish_Method.Exchange := new String'(Exchange);
@@ -319,7 +315,7 @@ package body AMQP.Channel is
 
       AMQP.Connection.Send_Frame (Chan.Conn.all, F);
 
-      Put_Line ("Message published");
+      pragma Debug (Ada.Text_IO.Put_Line ("Message published"));
    end Basic_Publish;
 
    procedure Basic_Consume (
@@ -328,7 +324,6 @@ package body AMQP.Channel is
       Consumer_Tag : String;
       No_Ack : Boolean := False
    ) is
-      use Ada.Text_IO;
       Consume_Method : Methods.Basic_Consume;
       Consume_Ok_Method : Methods.Basic_Consume_Ok;
       Args_Buf : Buffer;
@@ -340,7 +335,7 @@ package body AMQP.Channel is
          raise Channel_Error with "Channel not open";
       end if;
 
-      Put_Line ("Starting consumer on queue: " & Queue);
+      pragma Debug (Ada.Text_IO.Put_Line ("Starting consumer on queue: " & Queue));
 
       -- Send Basic.Consume
       Consume_Method.Queue := new String'(Queue);
@@ -352,10 +347,10 @@ package body AMQP.Channel is
       Encode_Basic_Consume (Args_Buf, Consume_Method);
       Send_Method (Chan, AMQP.Constants.CLASS_BASIC, AMQP.Constants.BASIC_CONSUME, Args_Buf);
 
-      Put_Line ("Sent Basic.Consume");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Basic.Consume"));
 
       -- Wait for Basic.Consume-Ok
-      Put_Line ("Waiting for Basic.Consume-Ok...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for Basic.Consume-Ok..."));
       Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
       if not Success then
          raise Channel_Error with "Failed to receive Basic.Consume-Ok";
@@ -372,7 +367,7 @@ package body AMQP.Channel is
          raise Channel_Error with "Failed to decode Basic.Consume-Ok";
       end if;
 
-      Put_Line ("Consumer started: " & Consume_Ok_Method.Consumer_Tag.all);
+      pragma Debug (Ada.Text_IO.Put_Line ("Consumer started: " & Consume_Ok_Method.Consumer_Tag.all));
    end Basic_Consume;
 
    procedure Basic_Get (
@@ -380,7 +375,6 @@ package body AMQP.Channel is
       Msg : out Message;
       Success : out Boolean
    ) is
-      use Ada.Text_IO;
       use Ada.Streams;
       Deliver_Method : Methods.Basic_Deliver;
       Header_Method : Methods.Content_Header;
@@ -395,7 +389,7 @@ package body AMQP.Channel is
          raise Channel_Error with "Channel not open";
       end if;
 
-      Put_Line ("Waiting for message...");
+      pragma Debug (Ada.Text_IO.Put_Line ("Waiting for message..."));
 
       -- Wait for Basic.Deliver
       Receive_Method (Chan, Class_Id, Method_Id, Args_Buf, Success);
@@ -415,7 +409,7 @@ package body AMQP.Channel is
          return;
       end if;
 
-      Put_Line ("Received Basic.Deliver");
+      pragma Debug (Ada.Text_IO.Put_Line ("Received Basic.Deliver"));
 
       -- Receive content header frame
       AMQP.Connection.Receive_Frame (Chan.Conn.all, F, Success);
@@ -436,7 +430,7 @@ package body AMQP.Channel is
          return;
       end if;
 
-      Put_Line ("Received content header, body size:" & Long_Long'Image (Header_Method.Body_Size));
+      pragma Debug (Ada.Text_IO.Put_Line ("Received content header, body size:" & Long_Long'Image (Header_Method.Body_Size)));
 
       -- Receive body frame
       AMQP.Connection.Receive_Frame (Chan.Conn.all, F, Success);
@@ -458,7 +452,7 @@ package body AMQP.Channel is
          Msg.Exchange := Deliver_Method.Exchange;
          Msg.Routing_Key := Deliver_Method.Routing_Key;
 
-         Put_Line ("Received message: " & Body_Str);
+         pragma Debug (Ada.Text_IO.Put_Line ("Received message: " & Body_Str));
          Success := True;
       end;
    end Basic_Get;
@@ -467,7 +461,6 @@ package body AMQP.Channel is
       Chan : in out Channel;
       Delivery_Tag : Long_Long
    ) is
-      use Ada.Text_IO;
       Ack_Method : Methods.Basic_Ack;
       Args_Buf : Buffer;
    begin
@@ -475,7 +468,7 @@ package body AMQP.Channel is
          raise Channel_Error with "Channel not open";
       end if;
 
-      Put_Line ("Acknowledging delivery tag:" & Long_Long'Image (Delivery_Tag));
+      pragma Debug (Ada.Text_IO.Put_Line ("Acknowledging delivery tag:" & Long_Long'Image (Delivery_Tag)));
 
       Ack_Method.Delivery_Tag := Delivery_Tag;
 
@@ -483,7 +476,7 @@ package body AMQP.Channel is
       Encode_Basic_Ack (Args_Buf, Ack_Method);
       Send_Method (Chan, AMQP.Constants.CLASS_BASIC, AMQP.Constants.BASIC_ACK, Args_Buf);
 
-      Put_Line ("Sent Basic.Ack");
+      pragma Debug (Ada.Text_IO.Put_Line ("Sent Basic.Ack"));
    end Basic_Ack;
 
 end AMQP.Channel;

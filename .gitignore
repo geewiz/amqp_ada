@@ -6,6 +6,8 @@ obj/
 *.bexch
 b~*.ad[sb]
 b__*.ad[sb]
+*.stderr
+*.stdout
 
 # Executables
 *.exe
@@ -16,6 +18,13 @@ test/connection_test
 test/handshake_test
 test/channel_test
 test/pubsub_test
+
+# Test binaries (in root when using amqp_debug.gpr)
+/amqp_test
+/connection_test
+/handshake_test
+/channel_test
+/pubsub_test
 
 # GNAT project files (generated)
 *.cgpr
