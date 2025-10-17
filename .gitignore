@@ -20,6 +20,10 @@ test/handshake_test
 test/channel_test
 test/pubsub_test
 
+# Example binaries
+examples/publisher
+examples/subscriber
+
 # GNAT project files (generated)
 *.cgpr
 
@@ -40,3 +44,6 @@ Thumbs.db
 *.tmp
 *.bak
 *.log
+
+# AI assistant guidance
+CLAUDE.md
