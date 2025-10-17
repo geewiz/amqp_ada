@@ -7,24 +7,24 @@ An Ada implementation of the AMQP 0-9-1 protocol for connecting to message broke
 This is an early-stage implementation with basic infrastructure in place.
 
 ### Completed
-- ✅ Project structure and build configuration
-- ✅ Basic AMQP types (Octet, Short, Long, Long_Long)
-- ✅ Protocol constants (frame types, class IDs, method IDs)
-- ✅ Basic codec (encoding/decoding primitives)
-- ✅ Field table structure definitions
+- [x] Project structure and build configuration
+- [x] Basic AMQP types (Octet, Short, Long, Long_Long)
+- [x] Protocol constants (frame types, class IDs, method IDs)
+- [x] Basic codec (encoding/decoding primitives)
+- [x] Field table structure definitions
 
 ### In Progress / TODO
-- ⬜ Frame processing layer
-- ⬜ Socket connection management (using GNAT.Sockets)
-- ⬜ Connection handshake (Start, Tune, Open)
-- ⬜ Channel management
-- ⬜ Basic.Publish implementation
-- ⬜ Basic.Consume implementation
-- ⬜ Queue/Exchange operations
-- ⬜ Acknowledgments and confirms
-- ⬜ Error handling and recovery
-- ⬜ Heartbeat mechanism
-- ⬜ TLS/SSL support
+- [ ] Frame processing layer
+- [ ] Socket connection management (using GNAT.Sockets)
+- [ ] Connection handshake (Start, Tune, Open)
+- [ ] Channel management
+- [ ] Basic.Publish implementation
+- [ ] Basic.Consume implementation
+- [ ] Queue/Exchange operations
+- [ ] Acknowledgments and confirms
+- [ ] Error handling and recovery
+- [ ] Heartbeat mechanism
+- [ ] TLS/SSL support
 
 ## Building
 
@@ -90,17 +90,11 @@ AMQP                      -- Root package, version info, exceptions
 
 ## Design Decisions
 
-### Strong Typing
-Ada's strong typing system is leveraged throughout:
-- `Channel_Number` is a distinct type preventing accidental misuse
-- Variant records for `Field_Value` ensure type safety
-- Enumeration types for frame types and method IDs
-
 ### Concurrency Model
-- Use Ada tasks for asynchronous message delivery
-- Protected objects for shared state (channels, pending confirms)
-- One reader task per connection
-- Separate task per consumer
+ Use Ada tasks for asynchronous message delivery
+ Protected objects for shared state (channels, pending confirms)
+ One reader task per connection
+ Separate task per consumer
 
 ### Memory Management
 - Controlled types for automatic resource cleanup

@@ -21,6 +21,7 @@ bin/
 .vscode/
 .idea/
 *.gpr.json
+.claude
 
 # OS files
 .DS_Store
