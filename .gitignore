@@ -8,8 +8,14 @@ b~*.ad[sb]
 b__*.ad[sb]
 
 # Executables
-bin/
 *.exe
+
+# Test binaries (in test directory)
+test/amqp_test
+test/connection_test
+test/handshake_test
+test/channel_test
+test/pubsub_test
 
 # GNAT project files (generated)
 *.cgpr
