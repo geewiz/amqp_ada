@@ -92,12 +92,4 @@ begin
          Put_Line ("  [FAIL] Method frame encode/decode");
       end if;
    end;
-
-   Put_Line ("");
-   Put_Line ("Next steps:");
-   Put_Line ("  1. Add socket connection management");
-   Put_Line ("  2. Implement connection handshake");
-   Put_Line ("  3. Build channel management");
-   Put_Line ("  4. Add publish/consume operations");
-
 end AMQP_Test;

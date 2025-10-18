@@ -34,6 +34,17 @@ package AMQP.Connection is
       Heartbeat : Short := 60;  -- seconds
    end record;
 
+   -- Factory function for creating connection configuration
+   function Create_Config (
+      Host : String;
+      Port : GNAT.Sockets.Port_Type := 5672;
+      Virtual_Host : String := "/";
+      Username : String := "guest";
+      Password : String := "guest";
+      Frame_Max : Long := 131072;
+      Heartbeat : Short := 60
+   ) return Connection_Config;
+
    -- Connection handle
    type Connection is tagged limited private;
 

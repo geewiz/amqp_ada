@@ -14,22 +14,14 @@ begin
    Put_Line ("=============================");
    New_Line;
 
-   -- Configure connection
-   Config.Host := new String'("localhost");
-   Config.Port := 5672;
-   Config.Virtual_Host := new String'("/");
-   Config.Username := new String'("guest");
-   Config.Password := new String'("guest");
-   Config.Frame_Max := 131072;
-   Config.Heartbeat := 60;
+   -- Configure connection using factory function
+   Config := Create_Config (Host => "localhost");
 
    Put_Line ("Connecting to " & Config.Host.all & ":" & Config.Port'Image);
 
    begin
       -- Establish connection
-      Connect (Conn, Config);
-      Send_Protocol_Header (Conn);
-      Perform_Handshake (Conn);
+      Connect_And_Authenticate (Conn, Config);
       Put_Line ("[PASS] Connection established");
       New_Line;
 

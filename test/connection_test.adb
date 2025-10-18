@@ -12,12 +12,8 @@ begin
    Put_Line ("====================");
    Put_Line ("");
 
-   -- Configure connection (using heap allocation for strings)
-   Config.Host := new String'("localhost");
-   Config.Port := 5672;
-   Config.Virtual_Host := new String'("/");
-   Config.Username := new String'("guest");
-   Config.Password := new String'("guest");
+   -- Configure connection using factory function
+   Config := Create_Config (Host => "localhost");
 
    Put_Line ("Attempting to connect to " & Config.Host.all & ":5672");
 
@@ -48,5 +44,4 @@ begin
 
    Put_Line ("");
    Put_Line ("Connection test complete");
-
 end Connection_Test;

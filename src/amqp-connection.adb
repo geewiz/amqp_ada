@@ -8,6 +8,27 @@ with Interfaces; use Interfaces;
 
 package body AMQP.Connection is
 
+   function Create_Config (
+      Host : String;
+      Port : GNAT.Sockets.Port_Type := 5672;
+      Virtual_Host : String := "/";
+      Username : String := "guest";
+      Password : String := "guest";
+      Frame_Max : Long := 131072;
+      Heartbeat : Short := 60
+   ) return Connection_Config is
+      Config : Connection_Config;
+   begin
+      Config.Host := new String'(Host);
+      Config.Port := Port;
+      Config.Virtual_Host := new String'(Virtual_Host);
+      Config.Username := new String'(Username);
+      Config.Password := new String'(Password);
+      Config.Frame_Max := Frame_Max;
+      Config.Heartbeat := Heartbeat;
+      return Config;
+   end Create_Config;
+
    procedure Connect (
       Conn : in out Connection;
       Config : Connection_Config

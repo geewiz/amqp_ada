@@ -11,14 +11,8 @@ begin
    Put_Line ("================================");
    New_Line;
 
-   -- Configure connection
-   Config.Host := new String'("localhost");
-   Config.Port := 5672;
-   Config.Virtual_Host := new String'("/");
-   Config.Username := new String'("guest");
-   Config.Password := new String'("guest");
-   Config.Frame_Max := 131072;  -- 128KB
-   Config.Heartbeat := 60;
+   -- Configure connection using factory function
+   Config := Create_Config (Host => "localhost");
 
    Put_Line ("Connecting to " & Config.Host.all & ":" & Config.Port'Image);
    New_Line;
