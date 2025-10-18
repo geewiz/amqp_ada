@@ -5,8 +5,6 @@ with AMQP.Methods;
 
 package AMQP.Channel is
 
-   type Connection_Access is access all AMQP.Connection.Connection;
-
    type Channel_State is (
       Closed,
       Opening,
@@ -14,13 +12,12 @@ package AMQP.Channel is
       Closing
    );
 
-   type Channel is tagged limited private;
+   type Channel (Conn : access AMQP.Connection.Connection) is tagged limited private;
    type Channel_Access is access all Channel;
 
    -- Channel lifecycle
    procedure Open (
       Chan : in out Channel;
-      Conn : Connection_Access;
       Channel_Number : AMQP.Types.Channel_Number
    );
 
@@ -74,8 +71,7 @@ package AMQP.Channel is
 
 private
 
-   type Channel is tagged limited record
-      Conn : Connection_Access;
+   type Channel (Conn : access AMQP.Connection.Connection) is tagged limited record
       Number : Channel_Number := 0;
       State : Channel_State := Closed;
    end record;

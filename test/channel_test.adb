@@ -7,8 +7,8 @@ with Ada.Exceptions; use Ada.Exceptions;
 procedure Channel_Test is
    Conn : aliased Connection;
    Config : Connection_Config;
-   Chan1 : aliased Channel;
-   Chan2 : aliased Channel;
+   Chan1 : aliased Channel (Conn'Access);
+   Chan2 : aliased Channel (Conn'Access);
 begin
    Put_Line ("AMQP Channel Management Test");
    Put_Line ("=============================");
@@ -26,14 +26,14 @@ begin
       New_Line;
 
       -- Open first channel
-      Open (Chan1, Conn'Unchecked_Access, 1);
+      Open (Chan1, 1);
       Put_Line ("[PASS] Channel 1 opened");
       Put_Line ("  State: " & Get_State (Chan1)'Image);
       Put_Line ("  Is Open: " & Is_Open (Chan1)'Image);
       New_Line;
 
       -- Open second channel
-      Open (Chan2, Conn'Unchecked_Access, 2);
+      Open (Chan2, 2);
       Put_Line ("[PASS] Channel 2 opened");
       Put_Line ("  State: " & Get_State (Chan2)'Image);
       Put_Line ("  Is Open: " & Is_Open (Chan2)'Image);

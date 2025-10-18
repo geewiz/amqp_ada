@@ -91,7 +91,6 @@ package body AMQP.Channel is
 
    procedure Open (
       Chan : in out Channel;
-      Conn : Connection_Access;
       Channel_Number : AMQP.Types.Channel_Number
    ) is
       Open_Method : Channel_Open;
@@ -105,11 +104,10 @@ package body AMQP.Channel is
          raise Channel_Error with "Channel already open";
       end if;
 
-      if not AMQP.Connection.Is_Connected (Conn.all) then
+      if not AMQP.Connection.Is_Connected (Chan.Conn.all) then
          raise Channel_Error with "Connection not established";
       end if;
 
-      Chan.Conn := Conn;
       Chan.Number := Channel_Number;
       Chan.State := Opening;
 

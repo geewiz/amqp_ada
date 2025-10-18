@@ -7,7 +7,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 procedure Pubsub_Test is
    Conn : aliased Connection;
    Config : Connection_Config;
-   Chan : aliased Channel;
+   Chan : aliased Channel (Conn'Access);
    Msg : Message;
    Success : Boolean;
 begin
@@ -27,7 +27,7 @@ begin
       New_Line;
 
       -- Open channel
-      Open (Chan, Conn'Unchecked_Access, 1);
+      Open (Chan, 1);
       Put_Line ("[PASS] Channel opened");
       New_Line;
 

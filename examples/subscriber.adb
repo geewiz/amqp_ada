@@ -8,7 +8,7 @@ with Ada.Exceptions; use Ada.Exceptions;
 
 procedure Subscriber is
    Conn : aliased Connection;
-   Chan : aliased Channel;
+   Chan : aliased Channel (Conn'Access);
    Config : Connection_Config;
    Msg : Message;
    Success : Boolean;
@@ -45,7 +45,7 @@ begin
       New_Line;
 
       -- Open channel
-      Open (Chan, Conn'Unchecked_Access, 1);
+      Open (Chan, 1);
       Put_Line ("Channel opened");
       New_Line;
 
