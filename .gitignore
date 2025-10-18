@@ -19,6 +19,7 @@ test/connection_test
 test/handshake_test
 test/channel_test
 test/pubsub_test
+test/url_test
 
 # Example binaries
 examples/publisher

@@ -20,7 +20,7 @@ clean:
 
 # Clean everything including test binaries
 clean-all: clean
-	rm -f test/amqp_test test/connection_test test/handshake_test test/channel_test test/pubsub_test
+	rm -f test/amqp_test test/connection_test test/handshake_test test/channel_test test/pubsub_test test/url_test
 	rm -rf obj
 
 # Run basic tests (requires RabbitMQ running on localhost:5672)
