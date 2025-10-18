@@ -50,5 +50,5 @@ expect breaking changes even in minor version bumps.
 - TLS (amqps://) not yet implemented
 - Access types used for dynamic strings in configuration
 
-[0.2.0]: https://github.com/your-repo/amqp_ada/releases/tag/v0.2.0
-[0.1.0]: https://github.com/your-repo/amqp_ada/releases/tag/v0.1.0
+[0.2.0]: https://github.com/geewiz/amqp_ada/releases/tag/v0.2.0
+[0.1.0]: https://github.com/geewiz/amqp_ada/releases/tag/v0.1.0
