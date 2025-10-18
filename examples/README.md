@@ -182,3 +182,21 @@ Edit `publisher.adb` and modify the delay statements:
 delay 0.5;  -- Delay between individual messages
 delay 1.0;  -- Delay between rounds
 ```
+
+### To connect to a different RabbitMQ server:
+
+Both examples use AMQP URL format for connection configuration:
+
+```ada
+Config := AMQP.URL.Parse ("amqp://guest:guest@localhost:5672/");
+```
+
+Change the URL to connect to a different server:
+
+```ada
+-- Connect to remote server with custom credentials
+Config := AMQP.URL.Parse ("amqp://myuser:mypass@rabbitmq.example.com:5672/");
+
+-- Connect to server with custom virtual host
+Config := AMQP.URL.Parse ("amqp://admin:secret@localhost:5672/production");
+```

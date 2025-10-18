@@ -2,6 +2,7 @@
 -- Subscribes to a subset of topics and prints received messages
 with AMQP.Connection; use AMQP.Connection;
 with AMQP.Channel; use AMQP.Channel;
+with AMQP.URL;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
 
@@ -33,8 +34,8 @@ begin
    Put_Line ("(Not subscribing to log.* topics)");
    New_Line;
 
-   -- Configure connection using factory function
-   Config := Create_Config (Host => "localhost");
+   -- Configure connection from URL
+   Config := AMQP.URL.Parse ("amqp://guest:guest@localhost:5672/");
 
    begin
       -- Connect and authenticate
