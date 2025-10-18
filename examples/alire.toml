@@ -5,7 +5,7 @@ website = "https://github.com/geewiz/amqp_ada"
 authors = ["Jochen Lillich"]
 maintainers = ["jochen@lillich.co"]
 maintainers-logins = ["geewiz"]
-licenses = "MIT"
+licenses = "Apache-2.0"
 tags = ["amqp", "examples", "messaging", "rabbitmq"]
 
 project-files = ["examples.gpr"]
