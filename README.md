@@ -178,73 +178,27 @@ AMQP                      -- Root package, version info, exceptions
 
 ## Example Usage
 
-```ada
-with AMQP.Connection; use AMQP.Connection;
-with AMQP.Channel; use AMQP.Channel;
+Complete, working examples are available in the [`examples/`](examples/) directory:
 
-procedure Example is
-   Conn : aliased Connection;
-   Chan : aliased Channel;
-   Config : Connection_Config;
-   Msg : Message;
-   Success : Boolean;
-begin
-   -- Configure connection
-   Config.Host := new String'("localhost");
-   Config.Port := 5672;
-   Config.Virtual_Host := new String'("/");
-   Config.Username := new String'("guest");
-   Config.Password := new String'("guest");
-   Config.Frame_Max := 131072;
-   Config.Heartbeat := 60;
+- **[`publisher.adb`](examples/publisher.adb)** - Continuously publishes messages to multiple queues
+- **[`subscriber.adb`](examples/subscriber.adb)** - Subscribes to specific queues and processes messages
 
-   -- Connect and perform handshake
-   Connect (Conn, Config);
-   Send_Protocol_Header (Conn);
-   Perform_Handshake (Conn);
+See [`examples/README.md`](examples/README.md) for detailed documentation on building and running the examples.
 
-   -- Open channel
-   Open (Chan, Conn'Unchecked_Access, 1);
+### Quick Start
 
-   -- Declare queue
-   Queue_Declare (
-      Chan,
-      Queue => "test_queue",
-      Durable => False,
-      Exclusive => False,
-      Auto_Delete => True
-   );
+```bash
+# Start RabbitMQ
+docker run -d --rm --name rabbitmq -p 5672:5672 rabbitmq:3-management
 
-   -- Publish message
-   Basic_Publish (
-      Chan        => Chan,
-      Exchange    => "",
-      Routing_Key => "test_queue",
-      Message_Body => "Hello, AMQP!"
-   );
+# Build examples
+gprbuild -P examples.gpr
 
-   -- Start consumer
-   Basic_Consume (
-      Chan,
-      Queue => "test_queue",
-      Consumer_Tag => "my_consumer",
-      No_Ack => False
-   );
+# Run subscriber (in one terminal)
+./examples/subscriber
 
-   -- Receive message
-   Basic_Get (Chan, Msg, Success);
-   if Success then
-      -- Process message
-      Ada.Text_IO.Put_Line ("Received: " & Msg.Content.all);
-
-      -- Acknowledge
-      Basic_Ack (Chan, Msg.Delivery_Tag);
-   end if;
-
-   -- Cleanup
-   Close (Chan);
-   Disconnect (Conn);
-end Example;
+# Run publisher (in another terminal)
+./examples/publisher
 ```
 
 ## Testing Strategy
