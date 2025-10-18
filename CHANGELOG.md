@@ -1,28 +1,25 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+I based the format on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+**IMPORTANT:** Until the project reaches maturity with a version 1.0 release,
+expect breaking changes even in minor version bumps.
 
 ## [0.2.0] - 2025-10-18
 
 ### Changed
+
 - **BREAKING**: Refactored Channel type to use discriminant for Connection reference
   - Channel now declared as: `Chan : aliased Channel (Conn'Access)`
   - Open procedure no longer takes Connection parameter: `Open (Chan, Channel_Number)`
   - Eliminates all `Unchecked_Access` usage in favor of safe `'Access`
   - Connection reference is now part of Channel's identity (discriminant pattern)
-  - Ada's accessibility checks now work correctly, preventing dangling references
-
-### Benefits
-- Safer API: All access checks verified at compile time
-- Cleaner API: Connection lifetime properly enforced by type system
-- Better Ada idioms: Uses discriminant pattern instead of working around accessibility rules
 
 ## [0.1.0] - 2025-10-18
 
 ### Added
+
 - Initial AMQP 0-9-1 client library implementation
 - Core protocol types and constants
 - Binary encoding/decoding (Codec package)
@@ -46,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Complete documentation in README.md and examples/README.md
 
 ### Implementation Notes
+
 - Synchronous/blocking API
 - Frame size: 8KB default
 - Support for default exchange routing
