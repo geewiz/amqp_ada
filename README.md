@@ -1,6 +1,7 @@
 # AMQP Ada - AMQP 0-9-1 Protocol Implementation in Ada
 
 An Ada implementation of the AMQP 0-9-1 protocol for connecting to message brokers like RabbitMQ.
+
 Note: I'm new to Ada and built this library using an LLM agent so I can learn the language by applying it in my daily DevOps practice. I couldn't find too many libraries for this space that are still maintained. I'll do my best to refactor and extend this foundation to proper Ada engineering standards. **Community input is always welcome** because my main goal is learning.
 
 One practical consequence of this approach is that until this library has reached a mature version 1.0, there will probably be **breaking changes** even with only minor version bumps.
