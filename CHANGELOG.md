@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **IMPORTANT:** Until the project reaches maturity with a version 1.0 release,
 expect breaking changes even in minor version bumps.
 
+## [0.3.0] - 2025-10-20
+
+- Prepare for Alire submission
+  - Update README
+  - Define license
+  - Update Github URL in CHANGELOG
+- README: Refer to the `examples/` directory for maintained code examples.
+
 ## [0.2.0] - 2025-10-18
 
 ### Changed

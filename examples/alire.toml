@@ -1,5 +1,5 @@
 name = "amqp_examples"
-version = "0.2.0"
+version = "0.3.0"
 description = "Example programs for the AMQP Ada library"
 website = "https://github.com/geewiz/amqp_ada"
 authors = ["Jochen Lillich"]
