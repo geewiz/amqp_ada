@@ -1,23 +1,14 @@
 name = "amqp_examples"
 version = "0.3.0"
 description = "Example programs for the AMQP Ada library"
+tags = ["amqp", "examples", "messaging", "rabbitmq"]
 website = "https://github.com/geewiz/amqp_ada"
+licenses = "Apache-2.0"
 authors = ["Jochen Lillich"]
 maintainers = ["contact@geewiz.dev"]
 maintainers-logins = ["geewiz"]
-licenses = "Apache-2.0"
-tags = ["amqp", "examples", "messaging", "rabbitmq"]
 
 project-files = ["examples.gpr"]
 
 [[depends-on]]
 amqp = "~0.2"
-
-[gpr-externals]
-
-[gpr-set-externals]
-
-[available.'case(os)']
-linux = true
-macos = true
-windows = true

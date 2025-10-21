@@ -1,20 +1,9 @@
 name = "amqp"
-version = "0.3.0"
+version = "0.3.1"
 description = "AMQP 0-9-1 client library for Ada"
-website = "https://github.com/geewiz/amqp_ada"
-authors = ["Jochen Lillich"]
-maintainers = ["contact@geewiz.dev"]
-maintainers-logins = ["geewiz"]
-licenses = "Apache-2.0"
 tags = ["amqp", "messaging", "rabbitmq", "protocol"]
-
-project-files = ["amqp.gpr"]
-
-[gpr-externals]
-
-[gpr-set-externals]
-
-[available.'case(os)']
-linux = true
-macos = true
-windows = true
+website = "https://github.com/geewiz/amqp_ada"
+licenses = "Apache-2.0"
+authors = ["Jochen Lillich <contact@geewiz.dev>"]
+maintainers = ["Jochen Lillich <contact@geewiz.dev>"]
+maintainers-logins = ["geewiz"]
